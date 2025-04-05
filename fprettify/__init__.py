@@ -40,14 +40,19 @@ supported criteria for alignment / indentation:
  Fortran lines:
  - if, else, endif
  - do, enddo
+ - block, end block
+ - associate, end associate
  - select case, case, end select
  - select rank, rank, end select
  - subroutine, end subroutine
  - function, end function
+ - module procedure, end procedure
  - module, end module
+ - submodule, end submodule
  - program, end program
  - interface, end interface
  - type, end type
+ - enum, end enum
  Actual lines (parts of Fortran lines separated by linebreaks):
  - bracket delimiters (.), (/./), and [.]
  - assignments by value = and pointer =>.
@@ -140,6 +145,9 @@ ENDMOD_RE = re.compile(SOL_STR + r"END\s*MODULE(\s+\w+)?" + EOL_STR, RE_FLAGS)
 SMOD_RE = re.compile(SOL_STR + r"SUBMODULE\s*\(\w+\)\s+\w+" + EOL_STR, RE_FLAGS)
 ENDSMOD_RE = re.compile(SOL_STR + r"END\s*SUBMODULE(\s+\w+)?" + EOL_STR, RE_FLAGS)
 
+PROCEDURE_RE = re.compile(r"^([^\"']* )?PROCEDURE\s*\w+" + EOL_STR, RE_FLAGS)
+ENDPROCEDURE_RE = re.compile(SOL_STR + r"END\s*PROCEDURE(\s+\w+)?" + EOL_STR, RE_FLAGS)
+
 TYPE_RE = re.compile(
     SOL_STR +
     r"TYPE(\s*,\s*(BIND\s*\(\s*C\s*\)|EXTENDS\s*\(.*\)|ABSTRACT|PUBLIC|PRIVATE))*(\s*,\s*)?(\s*::\s*|\s+)\w+" + EOL_STR,
@@ -196,7 +204,7 @@ FYPP_ENDMUTE_RE = re.compile(SOL_STR + r"#:ENDMUTE", RE_FLAGS)
 PRIVATE_RE = re.compile(SOL_STR + r"PRIVATE\s*::", RE_FLAGS)
 PUBLIC_RE = re.compile(SOL_STR + r"PUBLIC\s*::", RE_FLAGS)
 
-END_RE = re.compile(SOL_STR + r"(END)\s*(IF|DO|SELECT|ASSOCIATE|BLOCK|SUBROUTINE|FUNCTION|MODULE|SUBMODULE|TYPE|PROGRAM|INTERFACE|ENUM|WHERE|FORALL)", RE_FLAGS)
+END_RE = re.compile(SOL_STR + r"(END)\s*(IF|DO|SELECT|ASSOCIATE|BLOCK|SUBROUTINE|FUNCTION|MODULE|SUBMODULE|PROCEDURE|TYPE|PROGRAM|INTERFACE|ENUM|WHERE|FORALL)", RE_FLAGS)
 
 # intrinsic statements with parenthesis notation that are not functions
 INTR_STMTS_PAR = (r"(ALLOCATE|DEALLOCATE|"
@@ -305,19 +313,19 @@ def build_scope_parser(fypp=True, mod=True):
     parser = {}
     parser['new'] = \
         [parser_re(IF_RE), parser_re(DO_RE), parser_re(SELCASE_RE), parser_re(SUBR_RE),
-         parser_re(FCT_RE),
+         parser_re(FCT_RE), parser_re(PROCEDURE_RE),
          parser_re(INTERFACE_RE), parser_re(TYPE_RE), parser_re(ENUM_RE), parser_re(ASSOCIATE_RE),
          None, parser_re(BLK_RE), where_parser(WHERE_RE), forall_parser(FORALL_RE)]
 
     parser['continue'] = \
         [parser_re(ELSE_RE), None, parser_re(CASE_RE), parser_re(CONTAINS_RE),
-         parser_re(CONTAINS_RE),
+         parser_re(CONTAINS_RE), parser_re(CONTAINS_RE),
          None, parser_re(CONTAINS_RE), None, None,
          None, None, parser_re(ELSEWHERE_RE), None]
 
     parser['end'] = \
         [parser_re(ENDIF_RE), parser_re(ENDDO_RE), parser_re(ENDSEL_RE), parser_re(ENDSUBR_RE),
-         parser_re(ENDFCT_RE),
+         parser_re(ENDFCT_RE), parser_re(ENDPROCEDURE_RE),
          parser_re(ENDINTERFACE_RE), parser_re(ENDTYPE_RE), parser_re(ENDENUM_RE), parser_re(ENDASSOCIATE_RE),
          parser_re(ENDANY_RE,spec=False), parser_re(ENDBLK_RE), parser_re(ENDWHERE_RE), parser_re(ENDFORALL_RE)]
 

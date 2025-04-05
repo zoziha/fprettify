@@ -347,6 +347,22 @@ class FPrettifyTestCase(unittest.TestCase):
 
         self.assert_fprettify_result([], instring, outstring)
 
+    def test_procedure(self):
+        """test correct formatting of module procedure construct"""
+        instring = ("submodule(foo) foo_bar\n"
+                    "contains\n"
+                    "module procedure bar\n"
+                    "integer :: i\n"
+                    "end procedure bar\n"
+                    "end submodule foo_bar")
+        outstring = ("submodule(foo) foo_bar\n"
+                    "contains\n"
+                    "   module procedure bar\n"
+                    "      integer :: i\n"
+                    "   end procedure bar\n"
+                    "end submodule foo_bar")
+        self.assert_fprettify_result([], instring, outstring)
+
     def test_line_length(self):
         """test line length option"""
         instring = ["REAL(KIND=4) :: r,f  !  some reals",
